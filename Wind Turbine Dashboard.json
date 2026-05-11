@@ -1,0 +1,484 @@
+[
+    {
+        "id": "259f7c66243c7094",
+        "type": "tab",
+        "label": "Flow 1",
+        "disabled": false,
+        "info": "",
+        "env": []
+    },
+    {
+        "id": "2bd608425d100200",
+        "type": "inject",
+        "z": "259f7c66243c7094",
+        "name": "",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "1",
+        "crontab": "",
+        "once": true,
+        "onceDelay": "1",
+        "topic": "",
+        "payload": "",
+        "payloadType": "date",
+        "x": 190,
+        "y": 140,
+        "wires": [
+            [
+                "fa86a0e64a554f65"
+            ]
+        ]
+    },
+    {
+        "id": "fa86a0e64a554f65",
+        "type": "function",
+        "z": "259f7c66243c7094",
+        "name": "Simulator",
+        "func": "let state = flow.get(\"state\") || \"RUNNING\";\nlet rpm = flow.get(\"rpm\");\nlet wind = flow.get(\"wind\");\nlet power = flow.get(\"power\");\n\nif (rpm === undefined) rpm = 900;\nif (wind === undefined) wind = 11;\nif (power === undefined) power = 300;\n\nif (state === \"RUNNING\") {\n    wind = Math.max(5, Math.min(20, wind + (Math.random() * 2.4 - 1.2)));\n\n    let targetRpm = 700 + wind * 45;\n    rpm = rpm + (targetRpm - rpm) * 0.35 + (Math.random() * 60 - 30);\n    rpm = Math.max(250, Math.min(1600, rpm));\n\n    power = Math.round((rpm * wind) / 32);\n    power = Math.max(80, Math.min(1200, power));\n}\n\nif (state === \"BRAKE\") {\n    rpm = Math.max(0, rpm - 160);\n    power = Math.max(0, power - 90);\n}\n\nif (state === \"ESTOP\") {\n    rpm = 0;\n    power = 0;\n}\n\nflow.set(\"rpm\", rpm);\nflow.set(\"wind\", wind);\nflow.set(\"power\", power);\n\nlet now = new Date().toLocaleTimeString();\n\nreturn [\n    { payload: Math.round(rpm), topic: \"RPM\" },\n    { payload: Math.round(power), topic: \"Power\" },\n    { payload: wind.toFixed(1) + \" m/s\", topic: \"Wind Speed\" },\n    { payload: state, topic: \"State\" },\n    { payload: now, topic: \"Last Update\" }\n];",
+        "outputs": 5,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 340,
+        "y": 140,
+        "wires": [
+            [
+                "1fdadcab9ec0e0ab",
+                "224e827b24ebb325"
+            ],
+            [
+                "47b76474d1d2870d",
+                "a01f5ebd0a6a97fc"
+            ],
+            [
+                "d3ea69ac7eebfb27"
+            ],
+            [
+                "5950c637dcd5303e",
+                "8331c7fbf87c58fc"
+            ],
+            [
+                "bb37d73603138c14"
+            ]
+        ]
+    },
+    {
+        "id": "1fdadcab9ec0e0ab",
+        "type": "ui_gauge",
+        "z": "259f7c66243c7094",
+        "name": "",
+        "group": "707cfd890c80634b",
+        "order": 0,
+        "width": 0,
+        "height": 0,
+        "gtype": "gage",
+        "title": "rpm",
+        "label": "units",
+        "format": "{{value}}",
+        "min": 0,
+        "max": "1600",
+        "colors": [
+            "#00b500",
+            "#e6e600",
+            "#ca3838"
+        ],
+        "seg1": "",
+        "seg2": "",
+        "diff": false,
+        "className": "",
+        "x": 510,
+        "y": 60,
+        "wires": []
+    },
+    {
+        "id": "224e827b24ebb325",
+        "type": "ui_chart",
+        "z": "259f7c66243c7094",
+        "name": "",
+        "group": "c8b3f879b4535a71",
+        "order": 0,
+        "width": 0,
+        "height": 0,
+        "label": "RPM history",
+        "chartType": "line",
+        "legend": "false",
+        "xformat": "HH:mm:ss",
+        "interpolate": "linear",
+        "nodata": "",
+        "dot": false,
+        "ymin": "",
+        "ymax": "",
+        "removeOlder": 1,
+        "removeOlderPoints": "",
+        "removeOlderUnit": "3600",
+        "cutout": 0,
+        "useOneColor": false,
+        "useUTC": false,
+        "colors": [
+            "#1f77b4",
+            "#aec7e8",
+            "#ff7f0e",
+            "#2ca02c",
+            "#98df8a",
+            "#d62728",
+            "#ff9896",
+            "#9467bd",
+            "#c5b0d5"
+        ],
+        "outputs": 1,
+        "useDifferentColor": false,
+        "className": "",
+        "x": 530,
+        "y": 20,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "49424603b079790a",
+        "type": "ui_button",
+        "z": "259f7c66243c7094",
+        "name": "",
+        "group": "030d9b6fea6461ca",
+        "order": 0,
+        "width": 0,
+        "height": 0,
+        "passthru": false,
+        "label": "Start",
+        "tooltip": "",
+        "color": "",
+        "bgcolor": "",
+        "className": "",
+        "icon": "",
+        "payload": "RUNNING",
+        "payloadType": "str",
+        "topic": "topic",
+        "topicType": "msg",
+        "x": 170,
+        "y": 280,
+        "wires": [
+            [
+                "231aef62d55dd981"
+            ]
+        ]
+    },
+    {
+        "id": "d3ea69ac7eebfb27",
+        "type": "ui_text",
+        "z": "259f7c66243c7094",
+        "group": "418a3d1d9b7e724a",
+        "order": 0,
+        "width": 0,
+        "height": 0,
+        "name": "",
+        "label": "Wind speed",
+        "format": "{{msg.payload}}",
+        "layout": "row-spread",
+        "className": "",
+        "style": false,
+        "font": "",
+        "fontSize": 16,
+        "color": "#000000",
+        "x": 530,
+        "y": 180,
+        "wires": []
+    },
+    {
+        "id": "47b76474d1d2870d",
+        "type": "ui_gauge",
+        "z": "259f7c66243c7094",
+        "name": "",
+        "group": "707cfd890c80634b",
+        "order": 1,
+        "width": 0,
+        "height": 0,
+        "gtype": "gage",
+        "title": "Power",
+        "label": "units",
+        "format": "{{value}}",
+        "min": 0,
+        "max": "1200",
+        "colors": [
+            "#00b500",
+            "#e6e600",
+            "#ca3838"
+        ],
+        "seg1": "",
+        "seg2": "",
+        "diff": false,
+        "className": "",
+        "x": 510,
+        "y": 100,
+        "wires": []
+    },
+    {
+        "id": "a01f5ebd0a6a97fc",
+        "type": "ui_chart",
+        "z": "259f7c66243c7094",
+        "name": "",
+        "group": "c8b3f879b4535a71",
+        "order": 1,
+        "width": 0,
+        "height": 0,
+        "label": "Power history",
+        "chartType": "line",
+        "legend": "false",
+        "xformat": "HH:mm:ss",
+        "interpolate": "linear",
+        "nodata": "",
+        "dot": false,
+        "ymin": "",
+        "ymax": "",
+        "removeOlder": 1,
+        "removeOlderPoints": "",
+        "removeOlderUnit": "3600",
+        "cutout": 0,
+        "useOneColor": false,
+        "useUTC": false,
+        "colors": [
+            "#1f77b4",
+            "#aec7e8",
+            "#ff7f0e",
+            "#2ca02c",
+            "#98df8a",
+            "#d62728",
+            "#ff9896",
+            "#9467bd",
+            "#c5b0d5"
+        ],
+        "outputs": 1,
+        "useDifferentColor": false,
+        "className": "",
+        "x": 540,
+        "y": 140,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "5950c637dcd5303e",
+        "type": "ui_text",
+        "z": "259f7c66243c7094",
+        "group": "418a3d1d9b7e724a",
+        "order": 1,
+        "width": 0,
+        "height": 0,
+        "name": "",
+        "label": "State",
+        "format": "{{msg.payload}}",
+        "layout": "row-spread",
+        "className": "",
+        "style": false,
+        "font": "",
+        "fontSize": 16,
+        "color": "#000000",
+        "x": 530,
+        "y": 240,
+        "wires": []
+    },
+    {
+        "id": "bb37d73603138c14",
+        "type": "ui_text",
+        "z": "259f7c66243c7094",
+        "group": "418a3d1d9b7e724a",
+        "order": 2,
+        "width": 0,
+        "height": 0,
+        "name": "",
+        "label": "Last update",
+        "format": "{{msg.payload}}",
+        "layout": "row-spread",
+        "className": "",
+        "style": false,
+        "font": "",
+        "fontSize": 16,
+        "color": "#000000",
+        "x": 530,
+        "y": 280,
+        "wires": []
+    },
+    {
+        "id": "d47831877322284a",
+        "type": "ui_button",
+        "z": "259f7c66243c7094",
+        "name": "",
+        "group": "030d9b6fea6461ca",
+        "order": 1,
+        "width": 0,
+        "height": 0,
+        "passthru": false,
+        "label": "Brake",
+        "tooltip": "",
+        "color": "",
+        "bgcolor": "",
+        "className": "",
+        "icon": "",
+        "payload": "BRAKE",
+        "payloadType": "str",
+        "topic": "topic",
+        "topicType": "msg",
+        "x": 170,
+        "y": 340,
+        "wires": [
+            [
+                "231aef62d55dd981"
+            ]
+        ]
+    },
+    {
+        "id": "ee4806230d98acb7",
+        "type": "ui_button",
+        "z": "259f7c66243c7094",
+        "name": "",
+        "group": "030d9b6fea6461ca",
+        "order": 2,
+        "width": 0,
+        "height": 0,
+        "passthru": false,
+        "label": "E-Stop",
+        "tooltip": "",
+        "color": "",
+        "bgcolor": "",
+        "className": "",
+        "icon": "",
+        "payload": "ESTOP",
+        "payloadType": "str",
+        "topic": "topic",
+        "topicType": "msg",
+        "x": 170,
+        "y": 420,
+        "wires": [
+            [
+                "231aef62d55dd981"
+            ]
+        ]
+    },
+    {
+        "id": "231aef62d55dd981",
+        "type": "function",
+        "z": "259f7c66243c7094",
+        "name": "Control",
+        "func": "flow.set(\"state\", msg.payload);\nreturn null;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 340,
+        "y": 320,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "0b5337f2c5b3ac7a",
+        "type": "ui_text",
+        "z": "259f7c66243c7094",
+        "group": "418a3d1d9b7e724a",
+        "order": 3,
+        "width": 0,
+        "height": 0,
+        "name": "",
+        "label": "Alarm",
+        "format": "<font color=\"{{msg.color}}\"><b>{{msg.payload}}</b></font>",
+        "layout": "row-spread",
+        "className": "",
+        "style": false,
+        "font": "",
+        "fontSize": 16,
+        "color": "#000000",
+        "x": 670,
+        "y": 460,
+        "wires": []
+    },
+    {
+        "id": "8331c7fbf87c58fc",
+        "type": "function",
+        "z": "259f7c66243c7094",
+        "name": "alarm func",
+        "func": "let state = flow.get(\"state\") || \"RUNNING\";\nlet rpm = flow.get(\"rpm\") || 0;\n\nif (state === \"ESTOP\") {\n    msg.payload = \"EMERGENCY STOP ACTIVE\";\n    msg.color = \"darkred\";\n} else if (rpm > 1400) {\n    msg.payload = \"HIGH RPM WARNING\";\n    msg.color = \"red\";\n} else if (state === \"BRAKE\") {\n    msg.payload = \"BRAKE ENGAGED\";\n    msg.color = \"orange\";\n} else {\n    msg.payload = \"SYSTEM NORMAL\";\n    msg.color = \"green\";\n}\n\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 530,
+        "y": 460,
+        "wires": [
+            [
+                "0b5337f2c5b3ac7a"
+            ]
+        ]
+    },
+    {
+        "id": "707cfd890c80634b",
+        "type": "ui_group",
+        "name": "Live Metrics",
+        "tab": "7f241b69d5db712d",
+        "order": 1,
+        "disp": true,
+        "width": 6,
+        "collapse": false,
+        "className": ""
+    },
+    {
+        "id": "c8b3f879b4535a71",
+        "type": "ui_group",
+        "name": "Trends",
+        "tab": "7f241b69d5db712d",
+        "order": 2,
+        "disp": true,
+        "width": 6,
+        "collapse": false,
+        "className": ""
+    },
+    {
+        "id": "030d9b6fea6461ca",
+        "type": "ui_group",
+        "name": "Controls",
+        "tab": "7f241b69d5db712d",
+        "order": 3,
+        "disp": true,
+        "width": 6,
+        "collapse": false,
+        "className": ""
+    },
+    {
+        "id": "418a3d1d9b7e724a",
+        "type": "ui_group",
+        "name": "System Status",
+        "tab": "7f241b69d5db712d",
+        "order": 4,
+        "disp": true,
+        "width": 6,
+        "collapse": false,
+        "className": ""
+    },
+    {
+        "id": "7f241b69d5db712d",
+        "type": "ui_tab",
+        "name": "Wind Turbine Dashboard",
+        "icon": "dashboard",
+        "disabled": false,
+        "hidden": false
+    },
+    {
+        "id": "10e7a0d51590a287",
+        "type": "global-config",
+        "env": [],
+        "modules": {
+            "node-red-dashboard": "3.6.6"
+        }
+    }
+]
